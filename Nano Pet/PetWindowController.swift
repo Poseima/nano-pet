@@ -51,7 +51,7 @@ class PetWindowController: NSWindowController {
         if let screen = NSScreen.main {
             let screenFrame = screen.visibleFrame
             let x = screenFrame.midX - 64
-            let y = screenFrame.minY + 100
+            let y = screenFrame.minY + screenFrame.height * 0.05  // 5% from bottom
             window.setFrameOrigin(NSPoint(x: x, y: y))
         }
 
@@ -230,150 +230,10 @@ extension PetWindowController: ContextMenuDelegate {
         petViewModel.triggerState(PullupState())
     }
 
-    // MARK: Movement
-    func walkRequested() {
-        petViewModel.triggerState(WalkingState(direction: .randomHorizontal))
-    }
-
-    func jumpRequested() {
-        petViewModel.triggerState(JumpingState())
-    }
-
-    func climbRequested() {
-        // Climb the nearest wall
-        petViewModel.triggerState(ClimbingState(wall: .left, direction: .up))
-    }
-
-    func dangleRequested() {
-        petViewModel.triggerState(DanglingState())
-    }
-
-    func windowHoldRequested() {
-        // Get a window to hold onto
-        // When right-clicking, Nano Pet becomes active, so use previous window
-        let target: DetectedWindow?
-        if WindowDetector.shared.activeAppName == "Nano Pet" {
-            target = WindowDetector.shared.previousActiveWindow
-        } else {
-            target = WindowDetector.shared.activeWindow
-        }
-
-        guard let targetDetectedWindow = target ?? WindowDetector.shared.windows.first else {
-            print("[WindowHold] No windows available")
-            return
-        }
-
-        let targetWindow = WindowInfo(
-            id: targetDetectedWindow.id,
-            frame: targetDetectedWindow.frame,
-            topY: targetDetectedWindow.topEdge,
-            name: targetDetectedWindow.ownerName
-        )
-
-        print("[WindowHold] Triggering hold on window: \(targetDetectedWindow.ownerName)")
-        print("[WindowHold] Window frame: \(targetDetectedWindow.frame)")
-        print("[WindowHold] Window bottomY: \(targetWindow.bottomY), topY: \(targetWindow.topY), leftX: \(targetWindow.leftX)")
-        print("[WindowHold] Screen visibleFrame: \(NSScreen.main?.visibleFrame ?? .zero)")
-        print("[WindowHold] Screen full frame: \(NSScreen.main?.frame ?? .zero)")
-        print("[WindowHold] Expected pet Y: \(targetWindow.bottomY - 128) (pet top would be at \(targetWindow.bottomY))")
-
-        // WindowHoldState will handle teleporting to the window's left bottom corner
-        petViewModel.triggerState(WindowHoldState(window: targetWindow))
-    }
-
-    func teleportRequested() {
-        print("[Teleport] teleportRequested() called")
-        print("[Teleport] activeAppName: '\(WindowDetector.shared.activeAppName)'")
-        print("[Teleport] activeWindow: \(WindowDetector.shared.activeWindow?.ownerName ?? "nil")")
-        print("[Teleport] previousActiveWindow: \(WindowDetector.shared.previousActiveWindow?.ownerName ?? "nil")")
-        print("[Teleport] windows count: \(WindowDetector.shared.windows.count)")
-
-        // When right-clicking, Nano Pet becomes active, so use previous window
-        let target: DetectedWindow?
-        if WindowDetector.shared.activeAppName == "Nano Pet" {
-            target = WindowDetector.shared.previousActiveWindow
-            print("[Teleport] Using previousActiveWindow (Nano Pet is active)")
-        } else {
-            target = WindowDetector.shared.activeWindow
-            print("[Teleport] Using activeWindow")
-        }
-
-        guard let targetDetectedWindow = target else {
-            print("[Teleport] No target window, trying fallback...")
-            // Fallback to any window if no active window
-            guard let fallback = WindowDetector.shared.windows.first else {
-                print("[Teleport] No windows available, returning")
-                return
-            }
-            print("[Teleport] Using fallback window: \(fallback.ownerName)")
-            let targetWindow = WindowInfo(
-                id: fallback.id,
-                frame: fallback.frame,
-                topY: fallback.topEdge,
-                name: fallback.ownerName
-            )
-            petViewModel.triggerState(TeleportOutState(targetWindow: targetWindow))
-            return
-        }
-
-        print("[Teleport] Teleporting to: \(targetDetectedWindow.ownerName)")
-        let targetWindow = WindowInfo(
-            id: targetDetectedWindow.id,
-            frame: targetDetectedWindow.frame,
-            topY: targetDetectedWindow.topEdge,
-            name: targetDetectedWindow.ownerName
-        )
-        petViewModel.triggerState(TeleportOutState(targetWindow: targetWindow))
-    }
-
-    // MARK: Resting
-    func sitRequested() {
-        petViewModel.triggerState(SittingState())
-    }
-
-    func lieDownRequested() {
-        petViewModel.triggerState(LyingState())
-    }
-
-    func lookAroundRequested() {
-        petViewModel.triggerState(LookAroundState())
-    }
-
-    func sitLookUpRequested() {
-        petViewModel.triggerState(SitLookUpState())
-    }
-
-    func sitStretchRequested() {
-        petViewModel.triggerState(SitStretchState())
-    }
-
-    // MARK: Routines
-    func morningStretchRequested() {
-        petViewModel.startRoutine(MorningStretchRoutine())
-    }
-
-    func exerciseRequested() {
-        petViewModel.startRoutine(ExerciseRoutine())
-    }
-
-    func foragingRequested() {
-        petViewModel.startRoutine(ForagingRoutine())
-    }
-
-    func napRequested() {
-        petViewModel.startRoutine(NapRoutine())
-    }
-
-    func sunbathingRequested() {
-        petViewModel.startRoutine(SunbathingRoutine())
-    }
-
-    func deepSleepRequested() {
-        petViewModel.startRoutine(DeepSleepRoutine())
-    }
-
-    func nightPatrolRequested() {
-        petViewModel.startRoutine(NightPatrolRoutine())
+    // MARK: Replace
+    func randomReplaceRequested() {
+        guard let instance = petInstance else { return }
+        PetManager.shared.replacePetRandomly(instance)
     }
 
     // MARK: Remove

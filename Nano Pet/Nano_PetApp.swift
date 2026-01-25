@@ -27,13 +27,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     private let petManager = PetManager.shared
     private var nestWindow: NSWindow?
-    private var aiStudioWindow: NSWindow?
     private var assetImportWindow: NSWindow?
     private var settingsWindow: NSWindow?
     private var autoSpawnTimer: Timer?
     private var randomReplaceTimer: Timer?
     private var fullscreenCheckTimer: Timer?
     private var wasHiddenByFullscreen: Bool = false
+    private var statusBarMenu: NSMenu?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.shared = self
@@ -75,107 +75,108 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let button = statusItem.button {
             // Use custom menu bar icon (template image)
             button.image = NSImage(named: "MenuBarIcon")
+            // Left-click opens nest window directly
+            button.action = #selector(statusBarButtonClicked(_:))
+            button.target = self
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
 
         rebuildMenu()
     }
 
+    @objc private func statusBarButtonClicked(_ sender: NSStatusBarButton) {
+        guard let event = NSApp.currentEvent else { return }
+
+        if event.type == .rightMouseUp {
+            // Right-click shows menu
+            if let menu = statusBarMenu, let button = statusItem.button {
+                menu.popUp(positioning: nil, at: NSPoint(x: 0, y: button.bounds.height), in: button)
+            }
+        } else {
+            // Left-click opens nest window
+            openNest()
+        }
+    }
+
     func rebuildMenu() {
         let menu = NSMenu()
 
-        // 标题
         let titleItem = NSMenuItem(title: "Nano Pet", action: nil, keyEquivalent: "")
         titleItem.isEnabled = false
         menu.addItem(titleItem)
 
         menu.addItem(NSMenuItem.separator())
 
-        // 小窝
-        let nestItem = NSMenuItem(title: "打开小窝...", action: #selector(openNest), keyEquivalent: "")
-        nestItem.target = self
-        menu.addItem(nestItem)
-
-        // AI 素材工作室
-        let aiStudioItem = NSMenuItem(title: "AI 素材工作室...", action: #selector(openAIStudio), keyEquivalent: "")
-        aiStudioItem.target = self
-        menu.addItem(aiStudioItem)
-
-        menu.addItem(NSMenuItem.separator())
-
-        // 禁用跳跃 (toggle)
-        let jumpTitle = AppSettings.shared.disableJumping ? "启用跳跃" : "禁用跳跃"
+        // Disable/Enable Jumping
+        let jumpTitle = AppSettings.shared.disableJumping ? L.menuEnableJumping : L.menuDisableJumping
         let jumpItem = NSMenuItem(title: jumpTitle, action: #selector(toggleJumping), keyEquivalent: "")
         jumpItem.target = self
         menu.addItem(jumpItem)
 
-        // 隐藏宠物 (toggle)
-        let hideTitle = AppSettings.shared.petsHidden ? "显示宠物" : "隐藏宠物"
+        // Hide/Show Pets
+        let hideTitle = AppSettings.shared.petsHidden ? L.menuShowPets : L.menuHidePets
         let hideItem = NSMenuItem(title: hideTitle, action: #selector(toggleHidePets), keyEquivalent: "")
         hideItem.target = self
         menu.addItem(hideItem)
 
-        // 全屏隐藏 (toggle)
-        let fullscreenHideTitle = AppSettings.shared.hideOnFullscreen ? "✓ 全屏隐藏" : "全屏隐藏"
+        // Hide on Fullscreen
+        let fullscreenHideTitle = AppSettings.shared.hideOnFullscreen ? "✓ \(L.menuHideOnFullscreen)" : L.menuHideOnFullscreen
         let fullscreenHideItem = NSMenuItem(title: fullscreenHideTitle, action: #selector(toggleHideOnFullscreen), keyEquivalent: "")
         fullscreenHideItem.target = self
         menu.addItem(fullscreenHideItem)
 
-        // 宠物回家
-        let goHomeItem = NSMenuItem(title: "宠物回家", action: #selector(petsGoHome), keyEquivalent: "")
+        // Pets Go Home
+        let goHomeItem = NSMenuItem(title: L.menuGoHome, action: #selector(petsGoHome), keyEquivalent: "")
         goHomeItem.target = self
         menu.addItem(goHomeItem)
 
-        // 随机诞生
-        let randomBirthItem = NSMenuItem(title: "随机诞生", action: #selector(randomBirth), keyEquivalent: "")
+        // Random Birth
+        let randomBirthItem = NSMenuItem(title: L.menuRandomBirth, action: #selector(randomBirth), keyEquivalent: "")
         randomBirthItem.target = self
         menu.addItem(randomBirthItem)
 
-        // 自动分身 (submenu with toggle + custom interval)
-        let autoSpawnItem = NSMenuItem(title: "自动分身", action: nil, keyEquivalent: "")
+        // Auto Clone submenu
+        let autoSpawnItem = NSMenuItem(title: L.menuAutoSpawn, action: nil, keyEquivalent: "")
         let autoSpawnMenu = NSMenu()
 
-        let autoToggleTitle = AppSettings.shared.autoSpawnEnabled ? "停止自动分身" : "开始自动分身"
+        let autoToggleTitle = AppSettings.shared.autoSpawnEnabled ? L.menuStopAutoSpawn : L.menuStartAutoSpawn
         let autoToggleItem = NSMenuItem(title: autoToggleTitle, action: #selector(toggleAutoSpawn), keyEquivalent: "")
         autoToggleItem.target = self
         autoSpawnMenu.addItem(autoToggleItem)
 
         autoSpawnMenu.addItem(NSMenuItem.separator())
 
-        // 显示当前间隔
         let interval = AppSettings.shared.autoSpawnInterval
-        let intervalText = interval >= 60 ? "\(Int(interval / 60))分钟" : "\(Int(interval))秒"
-        let currentIntervalItem = NSMenuItem(title: "当前间隔: \(intervalText)", action: nil, keyEquivalent: "")
+        let intervalText = interval >= 60 ? L.minutes(Int(interval / 60)) : L.seconds(Int(interval))
+        let currentIntervalItem = NSMenuItem(title: "\(L.menuCurrentInterval): \(intervalText)", action: nil, keyEquivalent: "")
         currentIntervalItem.isEnabled = false
         autoSpawnMenu.addItem(currentIntervalItem)
 
-        // 设置间隔（弹出输入框）
-        let setIntervalItem = NSMenuItem(title: "设置间隔...", action: #selector(showSetIntervalDialog), keyEquivalent: "")
+        let setIntervalItem = NSMenuItem(title: L.menuSetInterval, action: #selector(showSetIntervalDialog), keyEquivalent: "")
         setIntervalItem.target = self
         autoSpawnMenu.addItem(setIntervalItem)
 
         autoSpawnItem.submenu = autoSpawnMenu
         menu.addItem(autoSpawnItem)
 
-        // 随机替换 (submenu with toggle + custom interval)
-        let randomReplaceItem = NSMenuItem(title: "随机替换", action: nil, keyEquivalent: "")
+        // Random Replace submenu
+        let randomReplaceItem = NSMenuItem(title: L.menuRandomReplace, action: nil, keyEquivalent: "")
         let randomReplaceMenu = NSMenu()
 
-        let replaceToggleTitle = AppSettings.shared.randomReplaceEnabled ? "停止随机替换" : "开始随机替换"
+        let replaceToggleTitle = AppSettings.shared.randomReplaceEnabled ? L.menuStopRandomReplace : L.menuStartRandomReplace
         let replaceToggleItem = NSMenuItem(title: replaceToggleTitle, action: #selector(toggleRandomReplace), keyEquivalent: "")
         replaceToggleItem.target = self
         randomReplaceMenu.addItem(replaceToggleItem)
 
         randomReplaceMenu.addItem(NSMenuItem.separator())
 
-        // 显示当前间隔
         let replaceInterval = AppSettings.shared.randomReplaceInterval
-        let replaceIntervalText = replaceInterval >= 60 ? "\(Int(replaceInterval / 60))分钟" : "\(Int(replaceInterval))秒"
-        let currentReplaceIntervalItem = NSMenuItem(title: "当前间隔: \(replaceIntervalText)", action: nil, keyEquivalent: "")
+        let replaceIntervalText = replaceInterval >= 60 ? L.minutes(Int(replaceInterval / 60)) : L.seconds(Int(replaceInterval))
+        let currentReplaceIntervalItem = NSMenuItem(title: "\(L.menuCurrentInterval): \(replaceIntervalText)", action: nil, keyEquivalent: "")
         currentReplaceIntervalItem.isEnabled = false
         randomReplaceMenu.addItem(currentReplaceIntervalItem)
 
-        // 设置间隔
-        let setReplaceIntervalItem = NSMenuItem(title: "设置间隔...", action: #selector(showSetRandomReplaceIntervalDialog), keyEquivalent: "")
+        let setReplaceIntervalItem = NSMenuItem(title: L.menuSetInterval, action: #selector(showSetRandomReplaceIntervalDialog), keyEquivalent: "")
         setReplaceIntervalItem.target = self
         randomReplaceMenu.addItem(setReplaceIntervalItem)
 
@@ -184,12 +185,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        // === 行为模式子菜单 ===
-        let behaviorModeItem = NSMenuItem(title: "行为模式", action: nil, keyEquivalent: "")
+        // Behavior Mode submenu
+        let behaviorModeItem = NSMenuItem(title: L.menuBehaviorMode, action: nil, keyEquivalent: "")
         let behaviorModeMenu = NSMenu()
 
         let randomModeItem = NSMenuItem(
-            title: AppSettings.shared.behaviorMode == .random ? "✓ 随机行为" : "随机行为",
+            title: AppSettings.shared.behaviorMode == .random ? "✓ \(L.behaviorRandom)" : L.behaviorRandom,
             action: #selector(setBehaviorModeRandom),
             keyEquivalent: ""
         )
@@ -197,7 +198,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         behaviorModeMenu.addItem(randomModeItem)
 
         let focusModeItem = NSMenuItem(
-            title: AppSettings.shared.behaviorMode == .focus ? "✓ 专注模式" : "专注模式",
+            title: AppSettings.shared.behaviorMode == .focus ? "✓ \(L.behaviorFocus)" : L.behaviorFocus,
             action: #selector(setBehaviorModeFocus),
             keyEquivalent: ""
         )
@@ -207,12 +208,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         behaviorModeItem.submenu = behaviorModeMenu
         menu.addItem(behaviorModeItem)
 
-        // === 动作频率子菜单 ===
-        let actionSpeedItem = NSMenuItem(title: "动作频率", action: nil, keyEquivalent: "")
+        // Action Speed submenu
+        let actionSpeedItem = NSMenuItem(title: L.menuActionSpeed, action: nil, keyEquivalent: "")
         let actionSpeedMenu = NSMenu()
 
         let slowItem = NSMenuItem(
-            title: AppSettings.shared.actionSpeed == .slow ? "✓ 慢" : "慢",
+            title: AppSettings.shared.actionSpeed == .slow ? "✓ \(L.speedSlow)" : L.speedSlow,
             action: #selector(setActionSpeedSlow),
             keyEquivalent: ""
         )
@@ -220,7 +221,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         actionSpeedMenu.addItem(slowItem)
 
         let mediumItem = NSMenuItem(
-            title: AppSettings.shared.actionSpeed == .medium ? "✓ 中等" : "中等",
+            title: AppSettings.shared.actionSpeed == .medium ? "✓ \(L.speedMedium)" : L.speedMedium,
             action: #selector(setActionSpeedMedium),
             keyEquivalent: ""
         )
@@ -228,7 +229,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         actionSpeedMenu.addItem(mediumItem)
 
         let fastItem = NSMenuItem(
-            title: AppSettings.shared.actionSpeed == .fast ? "✓ 快" : "快",
+            title: AppSettings.shared.actionSpeed == .fast ? "✓ \(L.speedFast)" : L.speedFast,
             action: #selector(setActionSpeedFast),
             keyEquivalent: ""
         )
@@ -240,12 +241,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        // 退出
-        let quitItem = NSMenuItem(title: "退出 Nano Pet", action: #selector(quitApp), keyEquivalent: "")
+        // Quit
+        let quitItem = NSMenuItem(title: L.menuQuit, action: #selector(quitApp), keyEquivalent: "")
         quitItem.target = self
         menu.addItem(quitItem)
 
-        statusItem.menu = menu
+        statusBarMenu = menu
     }
 
     // MARK: - Pet Management
@@ -294,7 +295,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if nestWindow == nil {
             let contentView = NestView()
             nestWindow = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 600, height: 500),
+                contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
                 styleMask: [.titled, .closable, .miniaturizable, .resizable],
                 backing: .buffered,
                 defer: false
@@ -302,25 +303,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             nestWindow?.title = "Nano Pet"
             nestWindow?.contentView = NSHostingView(rootView: contentView)
             nestWindow?.center()
+            nestWindow?.isReleasedWhenClosed = false
         }
         nestWindow?.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
-    }
-
-    @objc func openAIStudio() {
-        if aiStudioWindow == nil {
-            let contentView = AIStudioView()
-            aiStudioWindow = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 900, height: 650),
-                styleMask: [.titled, .closable, .miniaturizable, .resizable],
-                backing: .buffered,
-                defer: false
-            )
-            aiStudioWindow?.title = "AI 素材工作室"
-            aiStudioWindow?.contentView = NSHostingView(rootView: contentView)
-            aiStudioWindow?.center()
-        }
-        aiStudioWindow?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
 
@@ -333,9 +318,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 backing: .buffered,
                 defer: false
             )
-            assetImportWindow?.title = "素材包管理"
+            assetImportWindow?.title = L.assetImportTitle
             assetImportWindow?.contentView = NSHostingView(rootView: contentView)
             assetImportWindow?.center()
+            assetImportWindow?.isReleasedWhenClosed = false
         }
         assetImportWindow?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
@@ -350,9 +336,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 backing: .buffered,
                 defer: false
             )
-            settingsWindow?.title = "设置"
+            settingsWindow?.title = L.settingsTitle
             settingsWindow?.contentView = NSHostingView(rootView: contentView)
             settingsWindow?.center()
+            settingsWindow?.isReleasedWhenClosed = false
         }
         settingsWindow?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
@@ -395,6 +382,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func toggleAutoSpawn() {
         AppSettings.shared.autoSpawnEnabled.toggle()
+        applyAutoSpawnState()
+    }
+
+    /// 从设置页面调用：应用当前自动分身状态（不toggle）
+    @objc func applyAutoSpawnState() {
         if AppSettings.shared.autoSpawnEnabled {
             startAutoSpawn()
         } else {
@@ -405,11 +397,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func showSetIntervalDialog() {
         let alert = NSAlert()
-        alert.messageText = "设置自动分身间隔"
-        alert.informativeText = "请输入间隔时间（秒）："
+        alert.messageText = L.dialogSetAutoCloneInterval
+        alert.informativeText = L.dialogEnterIntervalSeconds
         alert.alertStyle = .informational
-        alert.addButton(withTitle: "确定")
-        alert.addButton(withTitle: "取消")
+        alert.addButton(withTitle: L.commonOK)
+        alert.addButton(withTitle: L.commonCancel)
 
         let inputField = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 24))
         inputField.stringValue = "\(Int(AppSettings.shared.autoSpawnInterval))"
@@ -440,10 +432,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         autoSpawnTimer = nil
     }
 
+    /// 从设置页面调用：重启自动分身定时器
+    @objc func restartAutoSpawn() {
+        if AppSettings.shared.autoSpawnEnabled {
+            stopAutoSpawn()
+            startAutoSpawn()
+        }
+        rebuildMenu()
+    }
+
     // MARK: - Random Replace Handlers
 
     @objc func toggleRandomReplace() {
         AppSettings.shared.randomReplaceEnabled.toggle()
+        applyRandomReplaceState()
+    }
+
+    /// 从设置页面调用：应用当前随机替换状态（不toggle）
+    @objc func applyRandomReplaceState() {
         if AppSettings.shared.randomReplaceEnabled {
             startRandomReplace()
         } else {
@@ -454,11 +460,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func showSetRandomReplaceIntervalDialog() {
         let alert = NSAlert()
-        alert.messageText = "设置随机替换间隔"
-        alert.informativeText = "请输入间隔时间（秒）："
+        alert.messageText = L.dialogSetRandomReplaceInterval
+        alert.informativeText = L.dialogEnterIntervalSeconds
         alert.alertStyle = .informational
-        alert.addButton(withTitle: "确定")
-        alert.addButton(withTitle: "取消")
+        alert.addButton(withTitle: L.commonOK)
+        alert.addButton(withTitle: L.commonCancel)
 
         let inputField = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 24))
         inputField.stringValue = "\(Int(AppSettings.shared.randomReplaceInterval))"
@@ -488,10 +494,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         randomReplaceTimer = nil
     }
 
+    /// 从设置页面调用：重启随机替换定时器
+    @objc func restartRandomReplace() {
+        if AppSettings.shared.randomReplaceEnabled {
+            stopRandomReplace()
+            startRandomReplace()
+        }
+        rebuildMenu()
+    }
+
     // MARK: - Fullscreen Monitor
 
     @objc func toggleHideOnFullscreen() {
         AppSettings.shared.hideOnFullscreen.toggle()
+        applyHideOnFullscreenState()
+    }
+
+    /// 从设置页面调用：应用当前全屏隐藏状态（不toggle）
+    @objc func applyHideOnFullscreenState() {
         if AppSettings.shared.hideOnFullscreen {
             startFullscreenMonitor()
         } else {

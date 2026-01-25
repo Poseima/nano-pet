@@ -10,17 +10,32 @@ import ServiceManagement
 
 // MARK: - Behavior Mode Enum
 
-enum BehaviorMode: String {
-    case random = "random"    // 随机行为（当前默认）
-    case focus = "focus"      // 专注模式
+enum BehaviorMode: String, CaseIterable {
+    case random = "random"
+    case focus = "focus"
+
+    var displayName: String {
+        switch self {
+        case .random: return L.behaviorRandom
+        case .focus: return L.behaviorFocus
+        }
+    }
 }
 
 // MARK: - Action Speed Enum
 
-enum ActionSpeed: String {
-    case slow = "slow"        // 慢 (6秒 = 360 ticks)
-    case medium = "medium"    // 中等 (4秒 = 240 ticks)
-    case fast = "fast"        // 快 (3秒 = 180 ticks) - 当前默认
+enum ActionSpeed: String, CaseIterable {
+    case slow = "slow"      // 6s = 360 ticks
+    case medium = "medium"  // 4s = 240 ticks
+    case fast = "fast"      // 3s = 180 ticks - default
+
+    var displayName: String {
+        switch self {
+        case .slow: return L.speedSlow
+        case .medium: return L.speedMedium
+        case .fast: return L.speedFast
+        }
+    }
 }
 
 // MARK: - App Settings
@@ -29,48 +44,8 @@ enum ActionSpeed: String {
 class AppSettings {
     static let shared = AppSettings()
 
-    // 显示设置
-    var petSize: Double {
-        didSet { save() }
-    }
-    var animationSpeed: Double {
-        didSet { save() }
-    }
-    var alwaysOnTop: Bool {
-        didSet { save() }
-    }
-
-    // 行为设置
-    var activityLevel: Double {
-        didSet { save() }
-    }
-    var enableWindowInteraction: Bool {
-        didSet { save() }
-    }
-    var allowPetsInWindows: Bool {
-        didSet { save() }
-    }
-
-    // 声音设置
-    var enableSounds: Bool {
-        didSet {
-            save()
-            // Stop all sounds if disabled
-            if !enableSounds {
-                SoundManager.shared.stopAllSounds()
-            }
-        }
-    }
-    var soundVolume: Double {
-        didSet {
-            save()
-            // Update volume in sound manager
-            SoundManager.shared.updateVolume()
-        }
-    }
-
-    // API 设置
-    var openRouterAPIKey: String {
+    // 语言设置
+    var language: AppLanguage {
         didSet { save() }
     }
 
@@ -82,35 +57,57 @@ class AppSettings {
         }
     }
 
-    // 新增：菜单控制设置
+    // 显示设置
+    var hideOnFullscreen: Bool {
+        didSet { save() }
+    }
+    var allowPetsInWindows: Bool {
+        didSet { save() }
+    }
+
+    // 行为设置
     var disableJumping: Bool {
         didSet { save() }
     }
+    var behaviorMode: BehaviorMode {
+        didSet { save() }
+    }
+    var actionSpeed: ActionSpeed {
+        didSet { save() }
+    }
+
+    // 自动功能设置
     var autoSpawnEnabled: Bool {
         didSet { save() }
     }
     var autoSpawnInterval: Double {
         didSet { save() }
     }
-    // 随机替换设置
     var randomReplaceEnabled: Bool {
         didSet { save() }
     }
     var randomReplaceInterval: Double {
         didSet { save() }
     }
-    var petsHidden: Bool {
-        didSet { save() }
+
+    // 声音设置
+    var enableSounds: Bool {
+        didSet {
+            save()
+            if !enableSounds {
+                SoundManager.shared.stopAllSounds()
+            }
+        }
     }
-    var hideOnFullscreen: Bool {
-        didSet { save() }
+    var soundVolume: Double {
+        didSet {
+            save()
+            SoundManager.shared.updateVolume()
+        }
     }
 
-    // 行为模式和动作频率
-    var behaviorMode: BehaviorMode {
-        didSet { save() }
-    }
-    var actionSpeed: ActionSpeed {
+    // 内部状态（不在设置页面显示）
+    var petsHidden: Bool {
         didSet { save() }
     }
 
@@ -126,56 +123,63 @@ class AppSettings {
     private let defaults = UserDefaults.standard
 
     init() {
-        // 加载保存的设置或使用默认值
-        self.petSize = defaults.double(forKey: "petSize") == 0 ? 1.0 : defaults.double(forKey: "petSize")
-        self.animationSpeed = defaults.double(forKey: "animationSpeed") == 0 ? 1.0 : defaults.double(forKey: "animationSpeed")
-        self.alwaysOnTop = defaults.bool(forKey: "alwaysOnTop")
-        self.activityLevel = defaults.double(forKey: "activityLevel") == 0 ? 0.5 : defaults.double(forKey: "activityLevel")
-        self.enableWindowInteraction = defaults.object(forKey: "enableWindowInteraction") == nil ? true : defaults.bool(forKey: "enableWindowInteraction")
-        self.allowPetsInWindows = defaults.object(forKey: "allowPetsInWindows") == nil ? true : defaults.bool(forKey: "allowPetsInWindows")
-        self.enableSounds = defaults.bool(forKey: "enableSounds")
-        self.soundVolume = defaults.double(forKey: "soundVolume") == 0 ? 0.5 : defaults.double(forKey: "soundVolume")
-        self.openRouterAPIKey = defaults.string(forKey: "openRouterAPIKey") ?? ""
+        // 语言设置
+        self.language = AppLanguage(rawValue: defaults.string(forKey: "language") ?? "en") ?? .english
+
+        // 启动设置
         self.launchAtLogin = defaults.bool(forKey: "launchAtLogin")
 
-        // 新增设置
+        // 显示设置
+        self.hideOnFullscreen = defaults.bool(forKey: "hideOnFullscreen")
+        self.allowPetsInWindows = defaults.object(forKey: "allowPetsInWindows") == nil ? true : defaults.bool(forKey: "allowPetsInWindows")
+
+        // 行为设置
         self.disableJumping = defaults.bool(forKey: "disableJumping")
+        self.behaviorMode = BehaviorMode(rawValue: defaults.string(forKey: "behaviorMode") ?? "random") ?? .random
+        self.actionSpeed = ActionSpeed(rawValue: defaults.string(forKey: "actionSpeed") ?? "fast") ?? .fast
+
+        // 自动功能设置
         self.autoSpawnEnabled = defaults.bool(forKey: "autoSpawnEnabled")
         self.autoSpawnInterval = defaults.double(forKey: "autoSpawnInterval") == 0 ? 30.0 : defaults.double(forKey: "autoSpawnInterval")
         self.randomReplaceEnabled = defaults.bool(forKey: "randomReplaceEnabled")
         self.randomReplaceInterval = defaults.double(forKey: "randomReplaceInterval") == 0 ? 60.0 : defaults.double(forKey: "randomReplaceInterval")
-        self.petsHidden = defaults.bool(forKey: "petsHidden")
-        self.hideOnFullscreen = defaults.bool(forKey: "hideOnFullscreen")
 
-        // 行为模式和动作频率
-        self.behaviorMode = BehaviorMode(rawValue: defaults.string(forKey: "behaviorMode") ?? "random") ?? .random
-        self.actionSpeed = ActionSpeed(rawValue: defaults.string(forKey: "actionSpeed") ?? "fast") ?? .fast
+        // 声音设置
+        self.enableSounds = defaults.bool(forKey: "enableSounds")
+        self.soundVolume = defaults.double(forKey: "soundVolume") == 0 ? 0.5 : defaults.double(forKey: "soundVolume")
+
+        // 内部状态
+        self.petsHidden = defaults.bool(forKey: "petsHidden")
     }
 
     private func save() {
-        defaults.set(petSize, forKey: "petSize")
-        defaults.set(animationSpeed, forKey: "animationSpeed")
-        defaults.set(alwaysOnTop, forKey: "alwaysOnTop")
-        defaults.set(activityLevel, forKey: "activityLevel")
-        defaults.set(enableWindowInteraction, forKey: "enableWindowInteraction")
-        defaults.set(allowPetsInWindows, forKey: "allowPetsInWindows")
-        defaults.set(enableSounds, forKey: "enableSounds")
-        defaults.set(soundVolume, forKey: "soundVolume")
-        defaults.set(openRouterAPIKey, forKey: "openRouterAPIKey")
+        // 语言设置
+        defaults.set(language.rawValue, forKey: "language")
+
+        // 启动设置
         defaults.set(launchAtLogin, forKey: "launchAtLogin")
 
-        // 新增设置
+        // 显示设置
+        defaults.set(hideOnFullscreen, forKey: "hideOnFullscreen")
+        defaults.set(allowPetsInWindows, forKey: "allowPetsInWindows")
+
+        // 行为设置
         defaults.set(disableJumping, forKey: "disableJumping")
+        defaults.set(behaviorMode.rawValue, forKey: "behaviorMode")
+        defaults.set(actionSpeed.rawValue, forKey: "actionSpeed")
+
+        // 自动功能设置
         defaults.set(autoSpawnEnabled, forKey: "autoSpawnEnabled")
         defaults.set(autoSpawnInterval, forKey: "autoSpawnInterval")
         defaults.set(randomReplaceEnabled, forKey: "randomReplaceEnabled")
         defaults.set(randomReplaceInterval, forKey: "randomReplaceInterval")
-        defaults.set(petsHidden, forKey: "petsHidden")
-        defaults.set(hideOnFullscreen, forKey: "hideOnFullscreen")
 
-        // 行为模式和动作频率
-        defaults.set(behaviorMode.rawValue, forKey: "behaviorMode")
-        defaults.set(actionSpeed.rawValue, forKey: "actionSpeed")
+        // 声音设置
+        defaults.set(enableSounds, forKey: "enableSounds")
+        defaults.set(soundVolume, forKey: "soundVolume")
+
+        // 内部状态
+        defaults.set(petsHidden, forKey: "petsHidden")
     }
 
     private func updateLaunchAtLogin() {
@@ -195,40 +199,25 @@ class AppSettings {
 
 struct SettingsView: View {
     @State private var settings = AppSettings.shared
-    @State private var showingAPIKeyAlert = false
-    @State private var apiKeyValidationStatus: APIKeyStatus = .unknown
-
-    enum APIKeyStatus {
-        case unknown, validating, valid, invalid
-    }
 
     var body: some View {
         VStack(spacing: 0) {
-            // 标题栏
             titleBar
 
             ScrollView {
                 VStack(spacing: 24) {
-                    // 显示设置
+                    languageSection
+                    launchSection
                     displaySection
-
-                    // 行为设置
                     behaviorSection
-
-                    // 声音设置
-                    soundSection
-
-                    // API 设置
-                    apiSection
-
-                    // 关于
+                    autoFunctionSection
                     aboutSection
                 }
                 .padding(24)
             }
         }
-        .background(Color(hex: "#FFF8F0"))
-        .frame(minWidth: 450, minHeight: 500)
+        .background(Color(hex: "#F5F5F7"))
+        .frame(minWidth: 450, minHeight: 550)
     }
 
     // MARK: - Title Bar
@@ -236,9 +225,10 @@ struct SettingsView: View {
     private var titleBar: some View {
         HStack {
             Image(systemName: "gearshape.fill")
-                .foregroundColor(Color(hex: "#FFB5A7"))
-            Text("设置")
-                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                .foregroundColor(Color(hex: "#007AFF"))
+            Text(L.settingsTitle)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(Color(hex: "#1D1D1F"))
 
             Spacer()
         }
@@ -247,181 +237,185 @@ struct SettingsView: View {
         .background(Color.white)
     }
 
-    // MARK: - Display Section
+    // MARK: - Language Section
 
-    private var displaySection: some View {
-        SettingsSection(title: "显示", icon: "display") {
-            VStack(spacing: 16) {
-                // 宠物大小
-                SettingsSlider(
-                    title: "宠物大小",
-                    value: $settings.petSize,
-                    range: 0.5...2.0,
-                    valueLabel: "\(Int(settings.petSize * 100))%"
-                )
-
-                // 动画速度
-                SettingsSlider(
-                    title: "动画速度",
-                    value: $settings.animationSpeed,
-                    range: 0.5...2.0,
-                    valueLabel: speedLabel
-                )
-
-                Divider()
-
-                // 开机自启动
-                SettingsToggle(
-                    title: "开机自启动",
-                    subtitle: "登录时自动启动 Nano Pet",
-                    isOn: $settings.launchAtLogin
-                )
-
-                // 始终置顶
-                SettingsToggle(
-                    title: "始终置顶",
-                    subtitle: "宠物始终显示在其他窗口上方",
-                    isOn: $settings.alwaysOnTop
-                )
+    private var languageSection: some View {
+        SettingsSection(title: L.settingsLanguage, icon: "globe") {
+            SettingsPicker(
+                title: L.settingsLanguage,
+                selection: Binding(
+                    get: { settings.language },
+                    set: { newValue in
+                        settings.language = newValue
+                        AppDelegate.shared?.rebuildMenu()
+                    }
+                ),
+                options: AppLanguage.allCases
+            ) { lang in
+                lang.displayName
             }
         }
     }
 
-    private var speedLabel: String {
-        if settings.animationSpeed < 0.7 {
-            return "慢速"
-        } else if settings.animationSpeed > 1.3 {
-            return "快速"
-        } else {
-            return "正常"
+    // MARK: - Launch Section
+
+    private var launchSection: some View {
+        SettingsSection(title: L.settingsLaunch, icon: "power") {
+            SettingsToggle(
+                title: L.settingsLaunchAtLogin,
+                subtitle: L.settingsLaunchAtLoginSubtitle,
+                isOn: Binding(
+                    get: { settings.launchAtLogin },
+                    set: { settings.launchAtLogin = $0 }
+                )
+            )
+        }
+    }
+
+    // MARK: - Display Section
+
+    private var displaySection: some View {
+        SettingsSection(title: L.settingsDisplay, icon: "display") {
+            VStack(spacing: 16) {
+                SettingsToggle(
+                    title: L.settingsHideOnFullscreen,
+                    subtitle: L.settingsHideOnFullscreenSubtitle,
+                    isOn: Binding(
+                        get: { settings.hideOnFullscreen },
+                        set: { newValue in
+                            settings.hideOnFullscreen = newValue
+                            AppDelegate.shared?.applyHideOnFullscreenState()
+                        }
+                    )
+                )
+
+                Divider()
+
+                SettingsToggle(
+                    title: L.settingsAllowInWindows,
+                    subtitle: L.settingsAllowInWindowsSubtitle,
+                    isOn: Binding(
+                        get: { settings.allowPetsInWindows },
+                        set: { settings.allowPetsInWindows = $0 }
+                    )
+                )
+            }
         }
     }
 
     // MARK: - Behavior Section
 
     private var behaviorSection: some View {
-        SettingsSection(title: "行为", icon: "sparkles") {
+        SettingsSection(title: L.settingsBehavior, icon: "sparkles") {
             VStack(spacing: 16) {
-                // 活跃程度
-                SettingsSlider(
-                    title: "活跃程度",
-                    value: $settings.activityLevel,
-                    range: 0.0...1.0,
-                    valueLabel: activityLabel
+                SettingsToggle(
+                    title: L.settingsDisableJumping,
+                    subtitle: L.settingsDisableJumpingSubtitle,
+                    isOn: Binding(
+                        get: { settings.disableJumping },
+                        set: { settings.disableJumping = $0 }
+                    )
                 )
 
                 Divider()
 
-                // 环境交互
-                SettingsToggle(
-                    title: "环境交互",
-                    subtitle: "允许宠物与窗口边缘互动",
-                    isOn: $settings.enableWindowInteraction
-                )
-
-                // 窗口内显示
-                SettingsToggle(
-                    title: "窗口内显示",
-                    subtitle: "允许宠物在其他窗口区域内显示",
-                    isOn: $settings.allowPetsInWindows
-                )
-            }
-        }
-    }
-
-    private var activityLabel: String {
-        if settings.activityLevel < 0.3 {
-            return "安静"
-        } else if settings.activityLevel > 0.7 {
-            return "活泼"
-        } else {
-            return "中等"
-        }
-    }
-
-    // MARK: - Sound Section
-
-    private var soundSection: some View {
-        SettingsSection(title: "声音", icon: "speaker.wave.2") {
-            VStack(spacing: 16) {
-                // 音效开关
-                SettingsToggle(
-                    title: "音效",
-                    subtitle: "播放宠物互动音效",
-                    isOn: $settings.enableSounds
-                )
-
-                if settings.enableSounds {
-                    // 音量
-                    SettingsSlider(
-                        title: "音量",
-                        value: $settings.soundVolume,
-                        range: 0.0...1.0,
-                        valueLabel: "\(Int(settings.soundVolume * 100))%"
-                    )
-                }
-            }
-        }
-    }
-
-    // MARK: - API Section
-
-    private var apiSection: some View {
-        SettingsSection(title: "API", icon: "key") {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("OpenRouter API Key")
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
-                    .foregroundColor(Color(hex: "#2D3436"))
-
-                HStack {
-                    SecureField("输入你的 API Key...", text: $settings.openRouterAPIKey)
-                        .textFieldStyle(.roundedBorder)
-                        .font(.system(size: 13, design: .rounded))
-
-                    Button(action: validateAPIKey) {
-                        switch apiKeyValidationStatus {
-                        case .unknown:
-                            Text("验证")
-                        case .validating:
-                            ProgressView()
-                                .scaleEffect(0.7)
-                        case .valid:
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(.green)
-                        case .invalid:
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.red)
+                SettingsPicker(
+                    title: L.settingsBehaviorMode,
+                    selection: Binding(
+                        get: { settings.behaviorMode },
+                        set: { newValue in
+                            settings.behaviorMode = newValue
+                            if newValue == .focus {
+                                PetManager.shared.moveAllPetsToDockOrBottom()
+                            }
                         }
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color(hex: "#F8F9FA"))
-                    .cornerRadius(6)
-                    .disabled(settings.openRouterAPIKey.isEmpty)
+                    ),
+                    options: BehaviorMode.allCases
+                ) { mode in
+                    mode.displayName
                 }
 
-                Text("用于 AI 素材工作室生成宠物素材")
-                    .font(.system(size: 11, design: .rounded))
-                    .foregroundColor(Color(hex: "#B2BEC3"))
+                Divider()
 
-                Link("获取 API Key", destination: URL(string: "https://openrouter.ai/keys")!)
-                    .font(.system(size: 12, design: .rounded))
-                    .foregroundColor(Color(hex: "#FFB5A7"))
+                SettingsPicker(
+                    title: L.settingsActionSpeed,
+                    selection: Binding(
+                        get: { settings.actionSpeed },
+                        set: { settings.actionSpeed = $0 }
+                    ),
+                    options: ActionSpeed.allCases
+                ) { speed in
+                    speed.displayName
+                }
             }
         }
     }
 
-    private func validateAPIKey() {
-        apiKeyValidationStatus = .validating
-        // 简单验证：检查 key 格式
-        Task {
-            try? await Task.sleep(nanoseconds: 500_000_000)
-            await MainActor.run {
-                if settings.openRouterAPIKey.hasPrefix("sk-") && settings.openRouterAPIKey.count > 20 {
-                    apiKeyValidationStatus = .valid
-                } else {
-                    apiKeyValidationStatus = .invalid
+    // MARK: - Auto Function Section
+
+    private var autoFunctionSection: some View {
+        SettingsSection(title: L.settingsAutoFeatures, icon: "arrow.triangle.2.circlepath") {
+            VStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 12) {
+                    SettingsToggle(
+                        title: L.settingsAutoClone,
+                        subtitle: L.settingsAutoCloneSubtitle,
+                        isOn: Binding(
+                            get: { settings.autoSpawnEnabled },
+                            set: { newValue in
+                                settings.autoSpawnEnabled = newValue
+                                AppDelegate.shared?.applyAutoSpawnState()
+                            }
+                        )
+                    )
+
+                    if settings.autoSpawnEnabled {
+                        SettingsIntervalInput(
+                            label: L.settingsInterval,
+                            value: Binding(
+                                get: { settings.autoSpawnInterval },
+                                set: { newValue in
+                                    settings.autoSpawnInterval = newValue
+                                    if settings.autoSpawnEnabled {
+                                        AppDelegate.shared?.restartAutoSpawn()
+                                    }
+                                }
+                            ),
+                            unit: L.settingsSeconds
+                        )
+                    }
+                }
+
+                Divider()
+
+                VStack(alignment: .leading, spacing: 12) {
+                    SettingsToggle(
+                        title: L.settingsRandomReplace,
+                        subtitle: L.settingsRandomReplaceSubtitle,
+                        isOn: Binding(
+                            get: { settings.randomReplaceEnabled },
+                            set: { newValue in
+                                settings.randomReplaceEnabled = newValue
+                                AppDelegate.shared?.applyRandomReplaceState()
+                            }
+                        )
+                    )
+
+                    if settings.randomReplaceEnabled {
+                        SettingsIntervalInput(
+                            label: L.settingsInterval,
+                            value: Binding(
+                                get: { settings.randomReplaceInterval },
+                                set: { newValue in
+                                    settings.randomReplaceInterval = newValue
+                                    if settings.randomReplaceEnabled {
+                                        AppDelegate.shared?.restartRandomReplace()
+                                    }
+                                }
+                            ),
+                            unit: L.settingsSeconds
+                        )
+                    }
                 }
             }
         }
@@ -430,16 +424,16 @@ struct SettingsView: View {
     // MARK: - About Section
 
     private var aboutSection: some View {
-        SettingsSection(title: "关于", icon: "info.circle") {
+        SettingsSection(title: L.settingsAbout, icon: "info.circle") {
             VStack(spacing: 12) {
                 HStack {
-                    Text("版本")
-                        .font(.system(size: 14, design: .rounded))
-                        .foregroundColor(Color(hex: "#636E72"))
+                    Text(L.settingsVersion)
+                        .font(.system(size: 14))
+                        .foregroundColor(Color(hex: "#86868B"))
                     Spacer()
                     Text("1.0.0")
-                        .font(.system(size: 14, design: .rounded))
-                        .foregroundColor(Color(hex: "#2D3436"))
+                        .font(.system(size: 14))
+                        .foregroundColor(Color(hex: "#1D1D1F"))
                 }
 
                 Divider()
@@ -447,8 +441,8 @@ struct SettingsView: View {
                 HStack {
                     Spacer()
                     Text("Nano Pet")
-                        .font(.system(size: 12, design: .rounded))
-                        .foregroundColor(Color(hex: "#B2BEC3"))
+                        .font(.system(size: 12))
+                        .foregroundColor(Color(hex: "#AEAEB2"))
                     Spacer()
                 }
             }
@@ -467,10 +461,10 @@ struct SettingsSection<Content: View>: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 Image(systemName: icon)
-                    .foregroundColor(Color(hex: "#FFB5A7"))
+                    .foregroundColor(Color(hex: "#007AFF"))
                 Text(title)
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
-                    .foregroundColor(Color(hex: "#2D3436"))
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(Color(hex: "#1D1D1F"))
             }
 
             VStack(spacing: 0) {
@@ -493,20 +487,20 @@ struct SettingsSlider: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(title)
-                    .font(.system(size: 14, design: .rounded))
-                    .foregroundColor(Color(hex: "#2D3436"))
+                    .font(.system(size: 14))
+                    .foregroundColor(Color(hex: "#1D1D1F"))
                 Spacer()
                 Text(valueLabel)
-                    .font(.system(size: 12, design: .rounded))
-                    .foregroundColor(Color(hex: "#636E72"))
+                    .font(.system(size: 12))
+                    .foregroundColor(Color(hex: "#86868B"))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(Color(hex: "#F8F9FA"))
+                    .background(Color(hex: "#F5F5F7"))
                     .cornerRadius(4)
             }
 
             Slider(value: $value, in: range)
-                .tint(Color(hex: "#FFB5A7"))
+                .tint(Color(hex: "#007AFF"))
         }
     }
 }
@@ -520,19 +514,72 @@ struct SettingsToggle: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: 14, design: .rounded))
-                    .foregroundColor(Color(hex: "#2D3436"))
+                    .font(.system(size: 14))
+                    .foregroundColor(Color(hex: "#1D1D1F"))
                 Text(subtitle)
-                    .font(.system(size: 11, design: .rounded))
-                    .foregroundColor(Color(hex: "#B2BEC3"))
+                    .font(.system(size: 11))
+                    .foregroundColor(Color(hex: "#AEAEB2"))
             }
 
             Spacer()
 
             Toggle("", isOn: $isOn)
                 .toggleStyle(.switch)
-                .tint(Color(hex: "#FFB5A7"))
+                .tint(Color(hex: "#007AFF"))
         }
+    }
+}
+
+struct SettingsPicker<T: Hashable>: View {
+    let title: String
+    @Binding var selection: T
+    let options: [T]
+    let labelForOption: (T) -> String
+
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.system(size: 14))
+                .foregroundColor(Color(hex: "#1D1D1F"))
+
+            Spacer()
+
+            Picker("", selection: $selection) {
+                ForEach(options, id: \.self) { option in
+                    Text(labelForOption(option)).tag(option)
+                }
+            }
+            .pickerStyle(.menu)
+            .tint(Color(hex: "#007AFF"))
+        }
+    }
+}
+
+struct SettingsIntervalInput: View {
+    let label: String
+    @Binding var value: Double
+    let unit: String
+
+    var body: some View {
+        HStack {
+            Text(label)
+                .font(.system(size: 13))
+                .foregroundColor(Color(hex: "#86868B"))
+
+            Spacer()
+
+            HStack(spacing: 8) {
+                TextField("", value: $value, format: .number)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 60)
+                    .multilineTextAlignment(.trailing)
+
+                Text(unit)
+                    .font(.system(size: 13))
+                    .foregroundColor(Color(hex: "#86868B"))
+            }
+        }
+        .padding(.leading, 16)
     }
 }
 

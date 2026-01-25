@@ -280,8 +280,8 @@ class PetManager {
             print("[PetManager] No Dock, using screen bottom, targetY = \(targetY)")
         }
 
-        // 计算宠物间距和起始位置
-        let petSpacing: CGFloat = 80  // 宠物之间的间距
+        // 计算宠物间距和起始位置 (5% of screen width, minimum 80px)
+        let petSpacing: CGFloat = max(80, (NSScreen.main?.visibleFrame.width ?? 1440) * 0.05)
         let totalWidth = CGFloat(visiblePets.count - 1) * petSpacing
         let startX = screenBounds.midX - totalWidth / 2
 
@@ -298,6 +298,32 @@ class PetManager {
 
         savePetStates()
         print("[PetManager] moveAllPetsToDockOrBottom completed")
+    }
+
+    /// Replace a single pet with a random character
+    func replacePetRandomly(_ pet: PetInstance) {
+        let allCharacters = AssetPackManager.shared.getAllCharacters()
+        guard !allCharacters.isEmpty else { return }
+        guard let randomCharacter = allCharacters.randomElement() else { return }
+
+        // Get position before removing
+        let position = pet.windowController.window?.frame.origin ?? CGPoint(x: 100, y: 100)
+        let wasVisible = pet.isVisible
+
+        // Remove old pet
+        pet.forceCleanup()
+        pets.removeAll { $0.id == pet.id }
+
+        // Create new pet at same position
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            if let newPet = self.addPet(petName: randomCharacter, at: position, source: .replaceRandom) {
+                if !wasVisible {
+                    newPet.hide()
+                }
+            }
+            self.savePetStates()
+        }
     }
 
     /// 随机替换所有宠物的角色

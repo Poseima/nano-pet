@@ -154,7 +154,8 @@ final class PhysicsEngine {
             } else {
                 // On ground - wall collision for climbing
                 // 负偏移让窗口超出边界，补偿精灵图的透明边距
-                pos.x = max(0, bounds.leftX - 55)
+                let spriteOffset = petSize.width * ScreenScaling.spriteOffsetRatio
+                pos.x = max(0, bounds.leftX - spriteOffset)
                 velocity.dx = 0
                 collisions.append(Collision(edge: .left, point: pos, normal: CGVector(dx: 1, dy: 0)))
                 surface = .wall(.left)
@@ -171,7 +172,8 @@ final class PhysicsEngine {
             } else {
                 // On ground - wall collision for climbing
                 // 正偏移让窗口超出边界，补偿精灵图的透明边距
-                pos.x = bounds.rightX - petSize.width + 55
+                let spriteOffset = petSize.width * ScreenScaling.spriteOffsetRatio
+                pos.x = bounds.rightX - petSize.width + spriteOffset
                 velocity.dx = 0
                 collisions.append(Collision(edge: .right, point: pos, normal: CGVector(dx: -1, dy: 0)))
                 surface = .wall(.right)
@@ -188,7 +190,8 @@ final class PhysicsEngine {
                 surface = .ceiling
             } else if velocity.dy > 0 {
                 // Moving upward slowly - stop at ceiling with visual offset
-                pos.y = bounds.ceilingY - petSize.height + 55
+                let spriteOffset = petSize.height * ScreenScaling.spriteOffsetRatio
+                pos.y = bounds.ceilingY - petSize.height + spriteOffset
                 velocity.dy = 0
                 collisions.append(Collision(edge: .up, point: pos, normal: CGVector(dx: 0, dy: -1)))
                 surface = .ceiling

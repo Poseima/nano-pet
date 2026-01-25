@@ -473,7 +473,8 @@ class WindowDetector {
     // MARK: - Proximity Detection
 
     /// 查找宠物附近的窗口边缘
-    func findNearbyEdges(petFrame: CGRect, maxDistance: CGFloat = 30) -> [EdgeProximity] {
+    func findNearbyEdges(petFrame: CGRect, maxDistance: CGFloat? = nil) -> [EdgeProximity] {
+        let effectiveMaxDistance = maxDistance ?? ScreenScaling.detectionThreshold(forPoint: petFrame.origin)
         var proximities: [EdgeProximity] = []
 
         let petCenterX = petFrame.midX
@@ -484,8 +485,8 @@ class WindowDetector {
 
         for window in windows {
             // 检查窗口顶部边缘（宠物可以站在上面）
-            if petBottom >= window.topEdge - maxDistance &&
-               petBottom <= window.topEdge + maxDistance &&
+            if petBottom >= window.topEdge - effectiveMaxDistance &&
+               petBottom <= window.topEdge + effectiveMaxDistance &&
                petCenterX >= window.leftEdge &&
                petCenterX <= window.rightEdge {
 
@@ -499,8 +500,8 @@ class WindowDetector {
             }
 
             // 检查窗口左侧边缘（宠物可以攀爬）
-            if petRight >= window.leftEdge - maxDistance &&
-               petRight <= window.leftEdge + maxDistance &&
+            if petRight >= window.leftEdge - effectiveMaxDistance &&
+               petRight <= window.leftEdge + effectiveMaxDistance &&
                petCenterY >= window.bottomEdge &&
                petCenterY <= window.topEdge {
 
@@ -514,8 +515,8 @@ class WindowDetector {
             }
 
             // 检查窗口右侧边缘
-            if petLeft >= window.rightEdge - maxDistance &&
-               petLeft <= window.rightEdge + maxDistance &&
+            if petLeft >= window.rightEdge - effectiveMaxDistance &&
+               petLeft <= window.rightEdge + effectiveMaxDistance &&
                petCenterY >= window.bottomEdge &&
                petCenterY <= window.topEdge {
 
@@ -534,12 +535,13 @@ class WindowDetector {
     }
 
     /// 查找宠物下方可以站立的窗口
-    func findWindowBelow(petFrame: CGRect, maxDistance: CGFloat = 50) -> DetectedWindow? {
+    func findWindowBelow(petFrame: CGRect, maxDistance: CGFloat? = nil) -> DetectedWindow? {
+        let effectiveMaxDistance = maxDistance ?? ScreenScaling.detectionThreshold(forPoint: petFrame.origin)
         let petCenterX = petFrame.midX
         let petBottom = petFrame.minY
 
         var closestWindow: DetectedWindow?
-        var closestDistance: CGFloat = maxDistance
+        var closestDistance: CGFloat = effectiveMaxDistance
 
         for window in windows {
             // 检查宠物是否在窗口的水平范围内
@@ -559,12 +561,13 @@ class WindowDetector {
     }
 
     /// 查找宠物上方的窗口（用于 peek from bottom）
-    func findWindowAbove(petFrame: CGRect, maxDistance: CGFloat = 150) -> DetectedWindow? {
+    func findWindowAbove(petFrame: CGRect, maxDistance: CGFloat? = nil) -> DetectedWindow? {
+        let effectiveMaxDistance = maxDistance ?? ScreenScaling.windowSearchRadius(forPoint: petFrame.origin)
         let petCenterX = petFrame.midX
         let petTop = petFrame.maxY
 
         var closestWindow: DetectedWindow?
-        var closestDistance: CGFloat = maxDistance
+        var closestDistance: CGFloat = effectiveMaxDistance
 
         for window in windows {
             // 检查宠物是否在窗口的水平范围内
@@ -584,15 +587,19 @@ class WindowDetector {
     }
 
     /// 查找附近可以从底部探头的窗口边缘
-    func findNearbyBottomEdges(petFrame: CGRect, maxDistance: CGFloat = 100) -> [EdgeProximity] {
+    func findNearbyBottomEdges(petFrame: CGRect, maxDistance: CGFloat? = nil) -> [EdgeProximity] {
+        let effectiveMaxDistance = maxDistance ?? ScreenScaling.windowSearchRadius(forPoint: petFrame.origin)
         var proximities: [EdgeProximity] = []
 
         let petCenterX = petFrame.midX
         let petTop = petFrame.maxY
 
+        // Use screen-aware threshold based on pet position
+        let tolerance = ScreenScaling.detectionThreshold(forPoint: petFrame.origin)
+
         for window in windows {
             // 检查宠物是否在窗口的水平范围内（有一定容差）
-            let horizontalOverlap = petCenterX >= window.leftEdge - 50 && petCenterX <= window.rightEdge + 50
+            let horizontalOverlap = petCenterX >= window.leftEdge - tolerance && petCenterX <= window.rightEdge + tolerance
 
             guard horizontalOverlap else {
                 continue
@@ -600,7 +607,7 @@ class WindowDetector {
 
             // 检查窗口底部边缘是否在宠物上方可达范围内
             let distance = window.bottomEdge - petTop
-            if distance >= 0 && distance <= maxDistance {
+            if distance >= 0 && distance <= effectiveMaxDistance {
                 proximities.append(EdgeProximity(
                     window: window,
                     edge: .bottom,

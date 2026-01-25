@@ -60,30 +60,30 @@ struct AssetImportView: View {
         ) { result in
             handleFileImport(result)
         }
-        .alert("导入错误", isPresented: $showingError) {
-            Button("确定", role: .cancel) {}
+        .alert(L.assetImportError, isPresented: $showingError) {
+            Button(L.commonOK, role: .cancel) {}
         } message: {
-            Text(importError ?? "未知错误")
+            Text(importError ?? L.assetUnknownError)
         }
-        .alert("确认删除", isPresented: $showingDeleteConfirm) {
-            Button("取消", role: .cancel) {}
-            Button("删除", role: .destructive) {
+        .alert(L.assetConfirmDelete, isPresented: $showingDeleteConfirm) {
+            Button(L.commonCancel, role: .cancel) {}
+            Button(L.commonDelete, role: .destructive) {
                 if let pack = selectedPack {
                     deletePack(pack)
                 }
             }
         } message: {
-            Text("确定要删除素材包 \"\(selectedPack?.name ?? "")\" 吗？此操作不可撤销。")
+            Text(L.assetDeletePackConfirm(selectedPack?.name ?? ""))
         }
-        .alert("确认删除角色", isPresented: $showingPetDeleteConfirm) {
-            Button("取消", role: .cancel) {}
-            Button("删除", role: .destructive) {
+        .alert(L.assetConfirmDeleteCharacter, isPresented: $showingPetDeleteConfirm) {
+            Button(L.commonCancel, role: .cancel) {}
+            Button(L.commonDelete, role: .destructive) {
                 if let name = selectedPetToDelete {
                     deletePet(name)
                 }
             }
         } message: {
-            Text("确定要删除 \"\(selectedPetToDelete ?? "")\" 吗？")
+            Text(L.assetDeleteCharacterConfirm(selectedPetToDelete ?? ""))
         }
         .onAppear {
             refreshPetList()
@@ -98,18 +98,18 @@ struct AssetImportView: View {
                 .font(.system(size: 48))
                 .foregroundColor(Color(hex: "#B2BEC3"))
 
-            Text("还没有角色")
+            Text(L.assetImportNoCharacters)
                 .font(.system(size: 16, weight: .medium, design: .rounded))
                 .foregroundColor(Color(hex: "#636E72"))
 
-            Text("点击上方\"导入素材\"按钮导入角色")
+            Text(L.assetImportClickToImport)
                 .font(.system(size: 13))
                 .foregroundColor(Color(hex: "#B2BEC3"))
 
             Button(action: { showingFilePicker = true }) {
                 HStack(spacing: 4) {
                     Image(systemName: "plus")
-                    Text("导入素材")
+                    Text(L.assetImportButton)
                 }
                 .font(.system(size: 14, weight: .medium))
                 .padding(.horizontal, 20)
@@ -130,10 +130,10 @@ struct AssetImportView: View {
             HStack {
                 Image(systemName: "star.fill")
                     .foregroundColor(Color(hex: "#FDCB6E"))
-                Text("已导入的角色")
+                Text(L.assetImportedCharacters)
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
                 Spacer()
-                Text("\(downloadedPets.count) 个")
+                Text("\(downloadedPets.count) \(L.assetImportCount)")
                     .font(.system(size: 12))
                     .foregroundColor(Color(hex: "#636E72"))
             }
@@ -194,10 +194,10 @@ struct AssetImportView: View {
                 .foregroundColor(Color(hex: "#2D3436"))
                 .lineLimit(1)
 
-            // 操作按钮
+            // Action buttons
             HStack(spacing: 6) {
                 Button(action: { usePet(name) }) {
-                    Text(isCurrent ? "使用中" : "使用")
+                    Text(isCurrent ? L.commonInUse : L.commonUse)
                         .font(.system(size: 10, weight: .medium))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 4)
@@ -237,7 +237,7 @@ struct AssetImportView: View {
             HStack {
                 Image(systemName: "folder.fill")
                     .foregroundColor(Color(hex: "#FFB5A7"))
-                Text("导入的素材包")
+                Text(L.assetImportedPacks)
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
             }
 
@@ -280,7 +280,7 @@ struct AssetImportView: View {
         HStack {
             Image(systemName: "folder.badge.plus")
                 .foregroundColor(Color(hex: "#FFB5A7"))
-            Text("素材包管理")
+            Text(L.assetImportTitle)
                 .font(.system(size: 18, weight: .semibold, design: .rounded))
 
             Spacer()
@@ -288,7 +288,7 @@ struct AssetImportView: View {
             Button(action: { showingFilePicker = true }) {
                 HStack(spacing: 4) {
                     Image(systemName: "plus")
-                    Text("导入素材")
+                    Text(L.assetImportButton)
                 }
                 .font(.system(size: 13, design: .rounded))
                 .padding(.horizontal, 12)
@@ -349,15 +349,15 @@ struct AssetImportView: View {
                     Spacer()
                 }
 
-                Text("\(pack.animations.count) 个动画")
+                Text("\(pack.animations.count) \(L.assetAnimations)")
                     .font(.system(size: 11))
                     .foregroundColor(Color(hex: "#B2BEC3"))
             }
 
-            // 操作按钮
+            // Action buttons
             HStack(spacing: 8) {
                 Button(action: { usePack(pack) }) {
-                    Text("使用")
+                    Text(L.commonUse)
                         .font(.system(size: 12, weight: .medium))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 6)

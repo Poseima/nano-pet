@@ -39,7 +39,7 @@ struct CategorySidebarView: View {
         VStack(alignment: .leading, spacing: 4) {
             sidebarItem(
                 emoji: "📋",
-                title: "All",
+                title: L.sidebarAll,
                 count: assetManager.totalCharacterCount,
                 isSelected: selectedCategoryId == nil && selectedSuperCategoryId == nil && !showFavorites && !showRecent
             ) {
@@ -48,7 +48,7 @@ struct CategorySidebarView: View {
 
             sidebarItem(
                 emoji: "⭐",
-                title: "Favorites",
+                title: L.nestFavorites,
                 count: assetManager.favorites.count,
                 isSelected: showFavorites
             ) {
@@ -60,7 +60,7 @@ struct CategorySidebarView: View {
 
             sidebarItem(
                 emoji: "🕐",
-                title: "Recent",
+                title: L.nestRecent,
                 count: assetManager.recentCharacters.count,
                 isSelected: showRecent
             ) {
@@ -76,7 +76,7 @@ struct CategorySidebarView: View {
 
     private var categoriesSection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("CATEGORIES")
+            Text(L.sidebarCategories)
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundColor(Color(hex: "#86868B"))
                 .padding(.leading, 12)

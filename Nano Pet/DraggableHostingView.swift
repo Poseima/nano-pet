@@ -24,36 +24,13 @@ protocol DragEventDelegate: AnyObject {
 
 /// Protocol for handling context menu actions from DraggableHostingView
 protocol ContextMenuDelegate: AnyObject {
-    // Spawning
+    // Breeding
     func spawnAnotherRequested()
     func divideRequested()
     func pullupRequested()
 
-    // Movement
-    func walkRequested()
-    func jumpRequested()
-    func climbRequested()
-    func teleportRequested()
-    func windowHoldRequested()
-
-    // Resting
-    func sitRequested()
-    func lieDownRequested()
-    func lookAroundRequested()
-
-    // Special
-    func sitLookUpRequested()
-    func sitStretchRequested()
-    func dangleRequested()
-
-    // Routines
-    func morningStretchRequested()
-    func exerciseRequested()
-    func foragingRequested()
-    func napRequested()
-    func sunbathingRequested()
-    func deepSleepRequested()
-    func nightPatrolRequested()
+    // Replace
+    func randomReplaceRequested()
 
     // Remove
     func removeRequested()
@@ -209,55 +186,12 @@ class DraggableHostingView<Content: View>: NSHostingView<Content>, NSMenuDelegat
         addMenuItem(to: breedingMenu, title: "Divide", action: #selector(triggerDivide))
         addMenuItem(to: breedingMenu, title: "Pullup", action: #selector(triggerPullup))
 
-        let breedingItem = NSMenuItem(title: "🥚 Breeding", action: nil, keyEquivalent: "")
+        let breedingItem = NSMenuItem(title: "Breeding", action: nil, keyEquivalent: "")
         breedingItem.submenu = breedingMenu
         menu.addItem(breedingItem)
 
-        // === Movement Submenu ===
-        let movementMenu = NSMenu()
-        movementMenu.autoenablesItems = false
-
-        addMenuItem(to: movementMenu, title: "Walk", action: #selector(triggerWalk))
-        addMenuItem(to: movementMenu, title: "Jump", action: #selector(triggerJump))
-        addMenuItem(to: movementMenu, title: "Climb Wall", action: #selector(triggerClimb))
-        addMenuItem(to: movementMenu, title: "Dangle", action: #selector(triggerDangle))
-        addMenuItem(to: movementMenu, title: "Window Hold", action: #selector(triggerWindowHold))
-        movementMenu.addItem(NSMenuItem.separator())
-        addMenuItem(to: movementMenu, title: "✨ Teleport to Window", action: #selector(triggerTeleport))
-
-        let movementItem = NSMenuItem(title: "🏃 Movement", action: nil, keyEquivalent: "")
-        movementItem.submenu = movementMenu
-        menu.addItem(movementItem)
-
-        // === Resting Submenu ===
-        let restingMenu = NSMenu()
-        restingMenu.autoenablesItems = false
-
-        addMenuItem(to: restingMenu, title: "Sit", action: #selector(triggerSit))
-        addMenuItem(to: restingMenu, title: "Lie Down", action: #selector(triggerLieDown))
-        addMenuItem(to: restingMenu, title: "Look Around", action: #selector(triggerLookAround))
-        addMenuItem(to: restingMenu, title: "Look Up", action: #selector(triggerSitLookUp))
-        addMenuItem(to: restingMenu, title: "Stretch", action: #selector(triggerSitStretch))
-
-        let restingItem = NSMenuItem(title: "😴 Resting", action: nil, keyEquivalent: "")
-        restingItem.submenu = restingMenu
-        menu.addItem(restingItem)
-
-        // === Routines Submenu ===
-        let routinesMenu = NSMenu()
-        routinesMenu.autoenablesItems = false
-
-        addMenuItem(to: routinesMenu, title: "🌅 Morning Stretch", action: #selector(triggerMorningStretch))
-        addMenuItem(to: routinesMenu, title: "🏋️ Exercise", action: #selector(triggerExercise))
-        addMenuItem(to: routinesMenu, title: "🔍 Foraging", action: #selector(triggerForaging))
-        addMenuItem(to: routinesMenu, title: "💤 Nap", action: #selector(triggerNap))
-        addMenuItem(to: routinesMenu, title: "☀️ Sunbathing", action: #selector(triggerSunbathing))
-        addMenuItem(to: routinesMenu, title: "🌙 Deep Sleep", action: #selector(triggerDeepSleep))
-        addMenuItem(to: routinesMenu, title: "🦉 Night Patrol", action: #selector(triggerNightPatrol))
-
-        let routinesItem = NSMenuItem(title: "📋 Routines", action: nil, keyEquivalent: "")
-        routinesItem.submenu = routinesMenu
-        menu.addItem(routinesItem)
+        // === Random Replace ===
+        addMenuItem(to: menu, title: "Random Replace", action: #selector(triggerRandomReplace))
 
         menu.addItem(NSMenuItem.separator())
 
@@ -291,78 +225,8 @@ class DraggableHostingView<Content: View>: NSHostingView<Content>, NSMenuDelegat
         contextMenuDelegate?.pullupRequested()
     }
 
-    @objc func triggerWalk() {
-        contextMenuDelegate?.walkRequested()
-    }
-
-    @objc func triggerJump() {
-        contextMenuDelegate?.jumpRequested()
-    }
-
-    @objc func triggerClimb() {
-        contextMenuDelegate?.climbRequested()
-    }
-
-    @objc func triggerDangle() {
-        contextMenuDelegate?.dangleRequested()
-    }
-
-    @objc func triggerTeleport() {
-        contextMenuDelegate?.teleportRequested()
-    }
-
-    @objc func triggerWindowHold() {
-        contextMenuDelegate?.windowHoldRequested()
-    }
-
-    @objc func triggerSit() {
-        contextMenuDelegate?.sitRequested()
-    }
-
-    @objc func triggerLieDown() {
-        contextMenuDelegate?.lieDownRequested()
-    }
-
-    @objc func triggerLookAround() {
-        contextMenuDelegate?.lookAroundRequested()
-    }
-
-    @objc func triggerSitLookUp() {
-        contextMenuDelegate?.sitLookUpRequested()
-    }
-
-    @objc func triggerSitStretch() {
-        contextMenuDelegate?.sitStretchRequested()
-    }
-
-    // MARK: - Routine Actions
-
-    @objc func triggerMorningStretch() {
-        contextMenuDelegate?.morningStretchRequested()
-    }
-
-    @objc func triggerExercise() {
-        contextMenuDelegate?.exerciseRequested()
-    }
-
-    @objc func triggerForaging() {
-        contextMenuDelegate?.foragingRequested()
-    }
-
-    @objc func triggerNap() {
-        contextMenuDelegate?.napRequested()
-    }
-
-    @objc func triggerSunbathing() {
-        contextMenuDelegate?.sunbathingRequested()
-    }
-
-    @objc func triggerDeepSleep() {
-        contextMenuDelegate?.deepSleepRequested()
-    }
-
-    @objc func triggerNightPatrol() {
-        contextMenuDelegate?.nightPatrolRequested()
+    @objc func triggerRandomReplace() {
+        contextMenuDelegate?.randomReplaceRequested()
     }
 
     @objc func removePet() {

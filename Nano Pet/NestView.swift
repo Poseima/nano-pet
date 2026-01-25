@@ -96,7 +96,7 @@ struct NestView: View {
             }
         }
         .background(Color(hex: "#F5F5F7"))
-        .frame(minWidth: 750, minHeight: 600)
+        .frame(minWidth: 500, minHeight: 400)
         .onReceive(NotificationCenter.default.publisher(for: .petChanged)) { _ in
             // Refresh if needed
         }
@@ -140,13 +140,13 @@ struct NestView: View {
 
     private var currentTitle: String {
         if showFavorites {
-            return "Favorites"
+            return L.nestFavorites
         } else if showRecent {
-            return "Recent"
+            return L.nestRecent
         } else if let cat = selectedCategory {
             return cat.name
         } else {
-            return "All Characters"
+            return L.nestAllCharacters
         }
     }
 
@@ -184,7 +184,7 @@ struct NestView: View {
                     .font(.system(size: 14))
                     .foregroundColor(Color(hex: "#86868B"))
 
-                TextField("Search pets...", text: $searchText)
+                TextField(L.nestSearchPlaceholder, text: $searchText)
                     .textFieldStyle(.plain)
                     .font(.system(size: 14))
 
@@ -206,7 +206,7 @@ struct NestView: View {
             Spacer()
 
             // Character count
-            Text("\(assetManager.totalCharacterCount) characters")
+            Text("\(assetManager.totalCharacterCount) \(L.nestCharacters)")
                 .font(.system(size: 13))
                 .foregroundColor(Color(hex: "#86868B"))
 
@@ -234,17 +234,17 @@ struct NestView: View {
                 .font(.system(size: 48))
                 .foregroundColor(Color(hex: "#C7C7CC"))
 
-            Text(searchText.isEmpty ? "No characters found" : "No results for \"\(searchText)\"")
+            Text(searchText.isEmpty ? L.nestNoCharactersFound : L.nestNoResultsFor(searchText))
                 .font(.system(size: 17, weight: .medium))
                 .foregroundColor(Color(hex: "#86868B"))
 
             if searchText.isEmpty {
-                Text("Import more characters using the Import button")
+                Text(L.nestImportMore)
                     .font(.system(size: 14))
                     .foregroundColor(Color(hex: "#AEAEB2"))
 
                 Button(action: openAssetImport) {
-                    Text("Import Characters")
+                    Text(L.nestImportCharacters)
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.white)
                         .padding(.horizontal, 20)
@@ -256,7 +256,7 @@ struct NestView: View {
                 .padding(.top, 8)
             } else {
                 Button(action: { searchText = "" }) {
-                    Text("Clear Search")
+                    Text(L.nestClearSearch)
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(Color(hex: "#007AFF"))
                 }
@@ -288,7 +288,7 @@ struct NestView: View {
                     .font(.system(size: 28))
                     .foregroundColor(isDropTargetActive ? Color(hex: "#007AFF") : Color(hex: "#86868B"))
 
-                Text(isDropTargetActive ? "Release to deploy" : "Drag a character here to deploy to desktop")
+                Text(isDropTargetActive ? L.nestDropToDeployActive : L.nestDropToDeploy)
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(isDropTargetActive ? Color(hex: "#007AFF") : Color(hex: "#86868B"))
             }
@@ -311,7 +311,7 @@ struct NestView: View {
                         .font(.system(size: 14))
                         .foregroundColor(Color(hex: "#007AFF"))
 
-                    Text("Desktop Pets")
+                    Text(L.nestDesktopPets)
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(Color(hex: "#1D1D1F"))
 
@@ -324,7 +324,7 @@ struct NestView: View {
 
                 if !petManager.pets.isEmpty {
                     Button(action: { petManager.removeAllPets() }) {
-                        Text("Remove All")
+                        Text(L.nestRemoveAll)
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(Color(hex: "#FF3B30"))
                     }
@@ -335,7 +335,7 @@ struct NestView: View {
             if petManager.pets.isEmpty {
                 HStack {
                     Spacer()
-                    Text("No desktop pets deployed")
+                    Text(L.nestNoDesktopPets)
                         .font(.system(size: 14))
                         .foregroundColor(Color(hex: "#86868B"))
                     Spacer()
@@ -390,7 +390,7 @@ struct NestView: View {
                         .fill(pet.isVisible ? Color(hex: "#34C759") : Color(hex: "#C7C7CC"))
                         .frame(width: 6, height: 6)
 
-                    Text(pet.isVisible ? "Active" : "Hidden")
+                    Text(pet.isVisible ? L.nestActive : L.nestHidden)
                         .font(.system(size: 11))
                         .foregroundColor(Color(hex: "#86868B"))
                 }

@@ -91,14 +91,18 @@ final class SenseEngine {
         let isOnRightWall = position.x >= bounds.rightX - petSize.width - surfaceThreshold
         let isOnWall: Direction? = isOnLeftWall ? .left : (isOnRightWall ? .right : nil)
 
+        // Get screen-aware thresholds based on pet position (for multi-monitor support)
+        let detectionThreshold = ScreenScaling.detectionThreshold(forPoint: position)
+        let searchRadius = ScreenScaling.windowSearchRadius(forPoint: position)
+
         // Window detection
-        let windowBelow = findWindowBelow(petFrame: petFrame, windows: windows)
+        let windowBelow = findWindowBelow(petFrame: petFrame, windows: windows, threshold: detectionThreshold)
         let isOnWindowTop = windowBelow != nil && abs(position.y - windowBelow!.topY) < surfaceThreshold
-        let windowAbove = findWindowAbove(position: position, windows: windows, maxDistance: 30)
+        let windowAbove = findWindowAbove(position: position, windows: windows, maxDistance: detectionThreshold)
 
         // Nearby windows
         let nearbyWindows = windows.filter { window in
-            let expandedFrame = window.frame.insetBy(dx: -50, dy: -50)
+            let expandedFrame = window.frame.insetBy(dx: -detectionThreshold, dy: -detectionThreshold)
             return expandedFrame.contains(petCenter)
         }
 
@@ -137,13 +141,13 @@ final class SenseEngine {
     // MARK: - Window Detection Helpers
 
     /// Find the window directly below the pet
-    private func findWindowBelow(petFrame: CGRect, windows: [WindowInfo]) -> WindowInfo? {
+    private func findWindowBelow(petFrame: CGRect, windows: [WindowInfo], threshold: CGFloat? = nil) -> WindowInfo? {
         let petBottom = petFrame.minY
         let petLeft = petFrame.minX
         let petRight = petFrame.maxX
 
         var closestWindow: WindowInfo?
-        var closestDistance: CGFloat = 50 // Max distance to detect
+        var closestDistance: CGFloat = threshold ?? ScreenScaling.detectionThreshold(forPoint: petFrame.origin)
 
         for window in windows {
             // Check horizontal overlap - require at least 50% of pet width to be over window
@@ -169,12 +173,13 @@ final class SenseEngine {
     }
 
     /// Find a window above the pet (for peeking)
-    func findWindowAbove(position: CGPoint, windows: [WindowInfo], maxDistance: CGFloat = 150) -> WindowInfo? {
+    func findWindowAbove(position: CGPoint, windows: [WindowInfo], maxDistance: CGFloat? = nil) -> WindowInfo? {
+        let effectiveMaxDistance = maxDistance ?? ScreenScaling.windowSearchRadius(forPoint: position)
         let petCenterX = position.x + petSize.width / 2
         let petTop = position.y + petSize.height
 
         var closestWindow: WindowInfo?
-        var closestDistance: CGFloat = maxDistance
+        var closestDistance: CGFloat = effectiveMaxDistance
 
         for window in windows {
             // Check horizontal overlap

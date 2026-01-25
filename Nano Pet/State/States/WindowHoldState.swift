@@ -23,9 +23,10 @@ final class WindowHoldState: PetState {
         self.window = window
         self.direction = direction ?? (Bool.random() ? .right : .left)
 
-        // Empirically determined offsets from user testing
-        let xOffset: CGFloat = 68
-        let yOffset: CGFloat = 45
+        // Proportional offsets based on pet size (68/128 and 45/128)
+        let petSize: CGFloat = 128  // Standard pet size
+        let xOffset: CGFloat = petSize * ScreenScaling.windowHoldXRatio
+        let yOffset: CGFloat = petSize * ScreenScaling.windowHoldYRatio
 
         let xPosition: CGFloat
         if self.direction == .right {
@@ -70,8 +71,12 @@ final class WindowHoldState: PetState {
         }
 
         // If we somehow lost the window (moved too far), fall
-        let petCenterX = perception.petPosition.x + 64
-        if petCenterX < window.leftX - 20 || petCenterX > window.rightX + 20 {
+        // Use standard pet width (128) / 2 for center calculation
+        let standardPetWidth: CGFloat = 128
+        let petCenterX = perception.petPosition.x + standardPetWidth / 2
+        // Use proportional tolerance based on pet size (20/128 = 0.156)
+        let tolerance = standardPetWidth * 0.156
+        if petCenterX < window.leftX - tolerance || petCenterX > window.rightX + tolerance {
             return FallingState()
         }
 
