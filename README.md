@@ -5,8 +5,8 @@
   <p>Adorable desktop companions that walk, climb, and interact with your windows</p>
 
   <p>
-    <a href="../../releases/latest"><img src="https://img.shields.io/github/v/release/mrsimpson3000/nano-pet?style=flat-square&color=blue" alt="Release"></a>
-    <a href="../../releases"><img src="https://img.shields.io/github/downloads/mrsimpson3000/nano-pet/total?style=flat-square&color=green" alt="Downloads"></a>
+    <a href="../../releases/latest"><img src="https://img.shields.io/github/v/release/Poseima/nano-pet?style=flat-square&color=blue" alt="Release"></a>
+    <a href="../../releases"><img src="https://img.shields.io/github/downloads/Poseima/nano-pet/total?style=flat-square&color=green" alt="Downloads"></a>
     <img src="https://img.shields.io/badge/platform-macOS-lightgrey?style=flat-square" alt="Platform">
   </p>
 
