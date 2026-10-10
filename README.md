@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/renshen-tidewater.gif" width="100%" alt="Nano Pet animated showcase">
+</p>
+
 <div align="center">
   <img src="docs/images/icon.png" width="128" height="128" alt="Nano Pet Icon">
   <h1>🐾 Nano Pet</h1>
