@@ -59,18 +59,15 @@
 
 ## 🏠 The Nest
 
-<table>
-  <tr>
-    <td align="center" width="60%">
-      <img src="docs/images/app_main_page.png" alt="Main Interface">
-      <br><em>📚 Character picker with category sidebar</em>
-    </td>
-    <td align="center" width="40%">
-      <img src="docs/images/settings_english.png" width="200" alt="Quick Menu">
-      <br><em>⚙️ Quick menu</em>
-    </td>
-  </tr>
-</table>
+<div align="center">
+  <img src="docs/images/app_main_page.png" width="100%" alt="Main Interface">
+  <p><em>📚 Character picker with category sidebar</em></p>
+</div>
+
+<div align="center">
+  <img src="docs/images/settings_english.png" width="100%" alt="Quick Menu">
+  <p><em>⚙️ Quick menu</em></p>
+</div>
 
 ---
 

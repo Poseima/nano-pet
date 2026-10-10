@@ -59,18 +59,15 @@
 
 ## 🏠 小窝展示
 
-<table>
-  <tr>
-    <td align="center" width="60%">
-      <img src="docs/images/app_main_page.png" alt="主界面">
-      <br><em>📚 带分类侧边栏的角色选择器</em>
-    </td>
-    <td align="center" width="40%">
-      <img src="docs/images/settings_chinese.png" width="200" alt="快捷菜单">
-      <br><em>⚙️ 快捷菜单</em>
-    </td>
-  </tr>
-</table>
+<div align="center">
+  <img src="docs/images/app_main_page.png" width="100%" alt="主界面">
+  <p><em>📚 带分类侧边栏的角色选择器</em></p>
+</div>
+
+<div align="center">
+  <img src="docs/images/settings_chinese.png" width="100%" alt="快捷菜单">
+  <p><em>⚙️ 快捷菜单</em></p>
+</div>
 
 ---
 
