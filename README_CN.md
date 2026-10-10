@@ -4,6 +4,10 @@
   <p><strong>✨ macOS 桌面宠物 ✨</strong></p>
   <p>可爱的桌面伙伴，能在桌面上行走、攀爬并与窗口互动</p>
 
+  <p><strong><a href="https://github.com/Poseima/nano-pet/releases/download/v1.0.0/Nano.Pet.1.0.0.dmg">⬇️ 下载 Mac 安装包（v1.0.0）</a></strong></p>
+  <p>macOS 14 及以上 · 无需编程，也无需安装 Xcode<br>点击下载 → 打开 DMG → 将 Nano Pet 拖入“应用程序”</p>
+  <p><a href="https://github.com/Poseima/nano-pet/releases/latest">查看最新版本与更新说明</a></p>
+
   <p>
     <a href="../../releases/latest"><img src="https://img.shields.io/github/v/release/Poseima/nano-pet?style=for-the-badge&logo=github&color=blue" alt="版本"></a>
     <a href="../../releases"><img src="https://img.shields.io/github/downloads/Poseima/nano-pet/total?style=for-the-badge&logo=github&color=green" alt="下载量"></a>
@@ -106,19 +110,17 @@
 
 ## 📥 安装
 
-### 💾 下载
+### 💾 直接下载安装
 
-<div align="center">
+**[⬇️ 下载 Nano Pet 的 Mac 安装包（v1.0.0，约 318 MB）](https://github.com/Poseima/nano-pet/releases/download/v1.0.0/Nano.Pet.1.0.0.dmg)** · [查看最新发布](https://github.com/Poseima/nano-pet/releases/latest)
 
-**[⬇️ 下载最新版本](../../releases/latest)**
+1. 点击上面的下载链接，保存 `Nano.Pet.1.0.0.dmg`。
+2. 双击打开 DMG，将 **Nano Pet** 拖入 **Applications（应用程序）** 文件夹。
+3. 在“应用程序”文件夹中打开 **Nano Pet**；启动后点击菜单栏中的宠物图标。
 
-</div>
+无需编程，也无需安装 Xcode。GitHub 的 **Code → Download ZIP** 下载的是源码；直接使用请下载上面的 **DMG 安装包**。
 
-1. 从 [Releases](../../releases/latest) 下载 `Nano.Pet.dmg`
-2. 打开 DMG 文件，将 **Nano Pet** 拖入应用程序文件夹
-3. 从应用程序启动
-
-> 💡 **提示：** 首次启动时，可能需要右键点击选择"打开"来绕过 Gatekeeper 安全验证。
+如果首次打开提示“无法验证开发者”或“Apple 无法检查是否包含恶意软件”，请先确认安装包来自本仓库的官方发布页面，再到 **系统设置 → 隐私与安全性 → 仍要打开** 中确认。[Apple 操作说明](https://support.apple.com/zh-cn/102445)
 
 ### 🔨 从源码构建
 
