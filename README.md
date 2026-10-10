@@ -3,10 +3,7 @@
   <h1>🐾 Nano Pet</h1>
   <p><strong>✨ Desktop Shimeji for macOS ✨</strong></p>
   <p>Adorable desktop companions that walk, climb, and interact with your windows</p>
-
-  <p><strong><a href="https://github.com/Poseima/nano-pet/releases/download/v1.0.0/Nano.Pet.1.0.0.dmg">⬇️ Download for Mac / 下载 Mac 安装包 (v1.0.0)</a></strong></p>
-  <p>macOS 14+ · No coding or Xcode required<br>Download → Open the DMG → Drag Nano Pet into Applications<br>点击下载 → 打开 DMG → 拖入“应用程序”</p>
-  <p><a href="https://github.com/Poseima/nano-pet/releases/latest">Latest release &amp; release notes / 最新版本与更新说明</a></p>
+  <p><strong><a href="https://github.com/Poseima/nano-pet/releases/download/v1.0.0/Nano.Pet.1.0.0.dmg">⬇️ Download for Mac / 下载 Mac 安装包</a></strong></p>
 
   <p>
     <a href="../../releases/latest"><img src="https://img.shields.io/github/v/release/Poseima/nano-pet?style=for-the-badge&logo=github&color=blue" alt="Release"></a>
@@ -110,17 +107,19 @@
 
 ## 📥 Installation
 
-### 💾 Download and install
+### 💾 Download
 
-**[⬇️ Download Nano Pet for Mac (v1.0.0, about 318 MB)](https://github.com/Poseima/nano-pet/releases/download/v1.0.0/Nano.Pet.1.0.0.dmg)** · [Latest release](https://github.com/Poseima/nano-pet/releases/latest)
+<div align="center">
 
-1. Click the download link above and save `Nano.Pet.1.0.0.dmg`.
-2. Open the DMG and drag **Nano Pet** into **Applications**.
-3. Open **Nano Pet** from Applications, then click its menu bar icon to get started.
+**[⬇️ Download Latest Release](../../releases/latest)**
 
-No coding or Xcode required. GitHub's **Code → Download ZIP** downloads the source code; to use the app, download the **DMG installer** above.
+</div>
 
-If macOS says the developer cannot be verified or Apple cannot check the app for malicious software, first confirm that you downloaded it from this repository's official release page, then go to **System Settings → Privacy & Security → Open Anyway** to confirm. [Apple's instructions](https://support.apple.com/en-us/102445)
+1. Download `Nano.Pet.dmg` from [Releases](../../releases/latest)
+2. Open the DMG and drag **Nano Pet** to your Applications folder
+3. Launch from Applications
+
+> 💡 **Tip:** On first launch, you may need to right-click and select "Open" to bypass Gatekeeper.
 
 ### 🔨 Build from Source
 
